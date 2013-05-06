@@ -1,12 +1,16 @@
 package matrixExample;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.List;
+import java.util.Vector;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
@@ -24,6 +28,8 @@ import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
+import utility.Model;
+
 import matrixExample.VertexData;
 
 import de.matthiasmann.twl.utils.PNGDecoder;
@@ -31,7 +37,7 @@ import de.matthiasmann.twl.utils.PNGDecoder.Format;
 
 public class TheQuadExampleMoving {
 	// Entry point for the application
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		new TheQuadExampleMoving();
 	}
 	
@@ -67,7 +73,7 @@ public class TheQuadExampleMoving {
 	private Vector3f cameraPos = null;
 	private FloatBuffer matrix44Buffer = null;
 	
-	public TheQuadExampleMoving() {
+	public TheQuadExampleMoving() throws IOException {
 		// Initialize OpenGL (Display)
 		this.setupOpenGL();
 		
@@ -153,36 +159,55 @@ public class TheQuadExampleMoving {
 	}
 	
 	
-	private VertexData[] readOBJ(VertexData[] verts){
+	private VertexData[] readOBJ(File f) throws IOException{
 		
+		BufferedReader reader = new BufferedReader(new FileReader(f));			
+	    String line;
 		
+		Vector<VertexData> vlist = new Vector<VertexData>();
+			    
+	    while ((line = reader.readLine()) != null) {
+            String prefix = line.split(" ")[0];
+            if (prefix.equals("#")) {
+                continue;
+            } else if (prefix.equals("v")) {
+               vlist.add(parseVertex(line));
+            } else if (prefix.equals("vn")) {
+            	continue;//m.getNormals().add(parseNormal(line));
+            } else if (prefix.equals("f")) {
+            	continue;//m.getFaces().add(parseFace(m.hasNormals(), line));
+            } else {
+                throw new RuntimeException("OBJ file contains line which cannot be parsed correctly: " + line);
+            }
+        }
+        reader.close();
 		
-		
-		
-		
+        VertexData[] verts = new VertexData[vlist.size()];
+        for(int v=0;v<verts.length;v++)verts[v]=vlist.elementAt(v);
 		return verts;
 		
 	}
 	
-	//this is where we want to read in .obj to get vertices...
-	private void setupModel() {
-		// We'll define our quad using 4 vertices of the custom 'TexturedVertex' class
 	
-		
-		
-		
-		VertexData v0 = new VertexData(); 
-		v0.setXYZ(-0.5f, 0.5f, 0); v0.setRGB(1, 0, 0); v0.setST(0, 0);
-		VertexData v1 = new VertexData(); 
-		v1.setXYZ(-0.5f, -0.5f, 0); v1.setRGB(0, 1, 0); v1.setST(0, 1);
-		VertexData v2 = new VertexData(); 
-		v2.setXYZ(0.5f, -0.5f, 0); v2.setRGB(0, 0, 1); v2.setST(1, 1);
-		VertexData v3 = new VertexData(); 
-		v3.setXYZ(0.5f, 0.5f, 0); v3.setRGB(1, 1, 1); v3.setST(1, 0);
-		
-		vertices = new VertexData[] {v0, v1, v2, v3};
-		
-		
+	
+	private static VertexData parseVertex(String line) {
+        String[] xyz = line.split(" ");
+        float x = Float.valueOf(xyz[1]);
+        float y = Float.valueOf(xyz[2]);
+        float z = Float.valueOf(xyz[3]);
+        VertexData v = new VertexData();
+        v.setXYZ(x, y, z);       
+        return v;
+    }
+	
+	
+	
+	
+	
+	//this is where we want to read in .obj to get vertices...
+	private void setupModel() throws IOException {
+	
+		vertices = readOBJ(new File("obj/malefromabove.obj"));
 		
 		
 		
