@@ -18,7 +18,9 @@ import static org.lwjgl.opengl.GL11.glVertex3f;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
@@ -26,6 +28,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 import utility.Camera;
@@ -45,13 +48,33 @@ public class GameEngine {
     private static final String WINDOW_TITLE = "ZombiesAteMyHomework";
     private static final int[] WINDOW_DIMENSIONS = {800, 600};
     long lastFrame;//time at last frame        
-	float x, z, d=.01f;//position of player	
+	float x, z, d;//position of player	
 	int fps;//frames per second
 	long lastFPS;//fps at last frame
 	private static int playerDisplayList;
     private static String playerPath="obj/malefromabove.obj";
     private static Camera camera;
     static double angle;
+	private float[] distance=new float[50];
+	private float dist=0;
+	private final double PI = 3.14159265358979323846;
+
+	
+	
+	// Moving variables
+		private int projectionMatrixLocation = 0;
+		private int viewMatrixLocation = 0;
+		private int modelMatrixLocation = 0;
+		private Matrix4f projectionMatrix = null;
+		private Matrix4f viewMatrix = null;
+		private Matrix4f modelMatrix = null;
+		private Vector3f modelPos = null;
+		private Vector3f modelAngle = null;
+		private Vector3f modelScale = null;
+		private Vector3f cameraPos = null;
+		private FloatBuffer matrix44Buffer = null;
+	
+	
 	
 	
     private void render() {
@@ -69,10 +92,37 @@ public class GameEngine {
          
          GL11.glScalef(.2f, .2f, .2f);
          GL11.glRotated(angle, 0, 1, 0);
-         glCallList(playerDisplayList);
+         renderDude();
+         moveEnemies();
+         renderEnemies();
          
     }
 
+    
+    private void renderDude(){    
+    	
+    	
+    	
+    	glCallList(playerDisplayList);  
+    	
+    }
+    
+    
+    
+    
+    private void initializeEnemies(){
+    	
+    	for(int f=0;f<distance.length;f++){    		
+    		distance[f]=600;   		
+    	}
+    	
+    }
+    
+    
+    
+    
+   
+    
     private static void logic() {
         // Add logic code here
     }
@@ -82,16 +132,16 @@ public class GameEngine {
           z=camera.z();
     	
        
-    	if (Keyboard.isKeyDown(Keyboard.KEY_A))x -= 0.05f * delta;
-		if (Keyboard.isKeyDown(Keyboard.KEY_D))x += 0.05f * delta;
+    	if (Keyboard.isKeyDown(Keyboard.KEY_A))x += 0.05f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_D))x -= 0.05f * delta;
 		
-		if (Keyboard.isKeyDown(Keyboard.KEY_W))z -= 0.05f * delta;
-		if (Keyboard.isKeyDown(Keyboard.KEY_S))z += 0.05f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_W))z += 0.05f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_S))z -= 0.05f * delta;
 	
 		
 		if(Keyboard.isKeyDown(Keyboard.KEY_1))System.out.println("Camera Angle:"+camera.pitch() +" "+camera.yaw() + " "+camera.roll());
 		if(Keyboard.isKeyDown(Keyboard.KEY_2))System.out.println("Camera Position:"+camera.x()	+" "+camera.y() + " "+camera.z());	
-		
+		if(Keyboard.isKeyDown(Keyboard.KEY_3))System.out.println("Player Position:"+camera.x()	+" "+camera.y() + " "+camera.z());	
 		
 		angle=getAngleBetween(x,z,Mouse.getX(), Mouse.getY());
 		
@@ -100,49 +150,60 @@ public class GameEngine {
 		// camera.processMouse(1, 80, -80);
 	       // camera.processKeyboard(getTimeElapsed()+1, 50, 50, 50);
 	     
-		
-		
 			if (Mouse.isButtonDown(0)) {
 	            Mouse.setGrabbed(true);
 	        } else if (Mouse.isButtonDown(1)) {
 	            Mouse.setGrabbed(false);
 	        }
 	     
-		
-		
-		//if (x < 0) x = 0;
-		//if (x > 800) x = 800;
-		
-		//if (d < -2) d = -2;
-		//if (d > 2) d = 2;
-		
-		//if (z < 0) z = 0;
-		//if (z > 600) z = 600;    	
     }
 
-    private static void cleanUp(boolean asCrash) {
+    private  void cleanUp(boolean asCrash) {
     	glDeleteLists(playerDisplayList, 1);
         Display.destroy();
         System.exit(asCrash ? 1 : 0);
     }
 
     
-    private static void setUpCamera() {
+    private  void setUpCamera() {
         camera = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
                 .setRotation(-1.12f, 0.16f, 0f).setPosition(-1.38f, 1.36f, 7.95f).setFieldOfView(60).build();
         camera.applyOptimalStates();
         camera.applyPerspectiveMatrix();
-        camera.setPosition(0, 30, 0);
+        camera.setPosition(0.f, 30f, 0.f);
         camera.setRotation(100f,0.16057983f, 0);  //80.0 0.16057983 0.0: pitch, yaw, roll:we want to be looking down
       
-        
        // camera.applyPerspectiveMatrix();
        // camera.setFieldOfView(120f);
     }
     
     
-    private static void setUpMatrices() {
-        // Add code for the initialization of the projection matrix here
+    private void setUpMatrices() {
+    	// Setup projection matrix
+    			projectionMatrix = new Matrix4f();
+    			float fieldOfView = 60f;
+    			float aspectRatio = (float)WINDOW_DIMENSIONS[0] / (float)WINDOW_DIMENSIONS[1];
+    			float near_plane = 0.1f;
+    			float far_plane = 100f;
+    			
+    			float y_scale = this.coTangent(this.degreesToRadians(fieldOfView / 2f));
+    			float x_scale = y_scale / aspectRatio;
+    			float frustum_length = far_plane - near_plane;
+    			
+    			projectionMatrix.m00 = x_scale;
+    			projectionMatrix.m11 = y_scale;
+    			projectionMatrix.m22 = -((far_plane + near_plane) / frustum_length);
+    			projectionMatrix.m23 = -1;
+    			projectionMatrix.m32 = -((2 * near_plane * far_plane) / frustum_length);
+    			
+    			// Setup view matrix
+    			viewMatrix = new Matrix4f();
+    			
+    			// Setup model matrix
+    			modelMatrix = new Matrix4f();
+    			
+    			// Create a FloatBuffer with the proper size to store our matrices later
+    			matrix44Buffer = BufferUtils.createFloatBuffer(16);
     }
 
     private static void setUpStates() {    
@@ -177,8 +238,9 @@ public class GameEngine {
     }
 
     
-    private static void setUpDisplayListPlayer() {
+    private  void setUpDisplayListPlayer() {
        playerDisplayList = glGenLists(1);
+       
         glNewList(playerDisplayList, GL_COMPILE);
         {
             Model m = null;
@@ -219,7 +281,7 @@ public class GameEngine {
     
     
     
-    private static void setUpDisplay() {
+    private  void setUpDisplay() {
     	try {        
             Display.setDisplayMode(new DisplayMode(WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1]));
             Display.setVSyncEnabled(true);
@@ -260,21 +322,87 @@ public class GameEngine {
 	    return delta;
 	}
     
-    
+	private float degreesToRadians(float degrees) {
+		return degrees * (float)(PI / 180d);
+	}
     public double getAngleBetween(double x1, double z1, double x2, double z2){
 		return(Math.atan2(z1-z2, x1-x2)*57.2957795);
 	}
-    
+	private float coTangent(float angle) {
+		return (float)(1f / Math.tan(angle));
+	}
     
 
     public static void main(String[] args) {
-        setUpDisplay();
-        setUpDisplayListPlayer();
-        setUpStates();
-        setUpMatrices();
-        setUpCamera();
-        GameEngine engine=new GameEngine();
+    	GameEngine engine = new GameEngine();
+    	
+    	
+    	
+        engine.setUpDisplay();
+        engine.setUpDisplayListPlayer();
+        engine.setUpStates();
+        engine.setUpMatrices();
+        engine.setUpCamera();
         engine.enterGameLoop();
-        cleanUp(false);
+        engine.cleanUp(false);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    private void renderEnemies(){
+	 	
+    	tickDistance(); 
+    	
+    	
+    	GL11.glColor3f(0.0f, 1.2f, 0.0f);    	
+    	//for(int f=0;f<distance.length;f++){  
+    		
+    	GL11.glTranslatef(dist, 0, dist);   	
+    	glCallList(playerDisplayList);    
+    
+    	
+    }
+    
+    
+    
+    private void tickDistance(){
+    	//for(float f:distance)   	
+    	if(dist<=0)dist=(float)Math.random()*10*100;  
+    	else dist--;   	
+    }
+    
+    private void moveEnemies(){
+    	GL11.glTranslatef(d, 0, d);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }
