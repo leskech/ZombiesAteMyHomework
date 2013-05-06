@@ -254,10 +254,10 @@ public final class EulerCamera implements Camera {
             throw new IllegalArgumentException("delta " + delta + " is 0 or is smaller than 0");
         }
 
-        boolean keyUp = Keyboard.isKeyDown(Keyboard.KEY_UP) || Keyboard.isKeyDown(Keyboard.KEY_W);
-        boolean keyDown = Keyboard.isKeyDown(Keyboard.KEY_DOWN) || Keyboard.isKeyDown(Keyboard.KEY_S);
-        boolean keyLeft = Keyboard.isKeyDown(Keyboard.KEY_LEFT) || Keyboard.isKeyDown(Keyboard.KEY_A);
-        boolean keyRight = Keyboard.isKeyDown(Keyboard.KEY_RIGHT) || Keyboard.isKeyDown(Keyboard.KEY_D);
+        boolean keyUp = Keyboard.isKeyDown(Keyboard.KEY_UP);// || Keyboard.isKeyDown(Keyboard.KEY_W);
+        boolean keyDown = Keyboard.isKeyDown(Keyboard.KEY_DOWN);// || Keyboard.isKeyDown(Keyboard.KEY_S);
+        boolean keyLeft = Keyboard.isKeyDown(Keyboard.KEY_LEFT);// || Keyboard.isKeyDown(Keyboard.KEY_A);
+        boolean keyRight = Keyboard.isKeyDown(Keyboard.KEY_RIGHT);// || Keyboard.isKeyDown(Keyboard.KEY_D);
         boolean flyUp = Keyboard.isKeyDown(Keyboard.KEY_SPACE);
         boolean flyDown = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT);
 

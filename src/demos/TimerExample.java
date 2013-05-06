@@ -1,4 +1,4 @@
-package utility;
+package demos;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;

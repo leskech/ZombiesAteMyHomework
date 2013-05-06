@@ -291,13 +291,13 @@ public class OBJLoader {
                 m.getTextureCoordinates().add(new Vector2f(s, t));
             } else if (line.startsWith("f ")) {
                 String[] faceIndices = line.split(" ");
-                int[] vertexIndicesArray = {Integer.parseInt(faceIndices[1].split("/")[0]),
-                        Integer.parseInt(faceIndices[2].split("/")[0]), Integer.parseInt(faceIndices[3].split("/")[0])};
+                int[] vertexIndicesArray = {Integer.parseInt(faceIndices[1].split(" ")[0]),
+                        Integer.parseInt(faceIndices[2].split(" ")[0]), Integer.parseInt(faceIndices[3].split(" ")[0])};
                 int[] textureCoordinateIndicesArray = {-1, -1, -1};
                 if (m.hasTextureCoordinates()) {
-                    textureCoordinateIndicesArray[0] = Integer.parseInt(faceIndices[1].split("/")[1]);
-                    textureCoordinateIndicesArray[1] = Integer.parseInt(faceIndices[2].split("/")[1]);
-                    textureCoordinateIndicesArray[2] = Integer.parseInt(faceIndices[3].split("/")[1]);
+                    textureCoordinateIndicesArray[0] = Integer.parseInt(faceIndices[1].split(" ")[1]);
+                    textureCoordinateIndicesArray[1] = Integer.parseInt(faceIndices[2].split(" ")[1]);
+                    textureCoordinateIndicesArray[2] = Integer.parseInt(faceIndices[3].split(" ")[1]);
                 }
                 int[] normalIndicesArray = {0, 0, 0};
                 if (m.hasNormals()) {
