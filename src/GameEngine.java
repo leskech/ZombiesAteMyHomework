@@ -57,7 +57,10 @@ public class GameEngine {
 	private static int playerDisplayList;
     private static String playerPath="obj/malefromabove.obj";
     private static Camera playerCam;
-    private static Camera enemyCam;
+   // private static Camera enemyCam;
+    private static Vector<Camera> enemyCams;
+    
+    
     private static Vector<Camera> weaponCams;
     
     private boolean wxleft, wzup, wxright, wzdown;
@@ -88,27 +91,19 @@ public class GameEngine {
          
          
          for(Camera w:weaponCams){
-        	 glLoadIdentity();
-        	 
+        	 glLoadIdentity();       	 
         	 moveWeapon((EulerCamera)w);
         	 GL11.glScalef(.1f, .1f, .1f);//scale dude
-             renderWeapon();
-        	 
-        	 
-        	 
+             renderWeapon();       	 
          }
-         
+         for(Camera w:enemyCams){
+        	 glLoadIdentity();       	 
+        	 moveEnemies((EulerCamera)w);
+        	 GL11.glScalef(.1f, .1f, .1f);//scale dude
+             renderEnemies();       	 
+         }
         
-         
-         glLoadIdentity();
-         
         
-         
-         
-         moveEnemies(enemyCam);         
-         GL11.glScalef(.1f, .1f, .1f);        
-         renderEnemies();
-         
     }
 
     
@@ -156,6 +151,18 @@ public class GameEngine {
     	GL11.glColor3f(0.0f, 1.2f, 0.0f);       	
     	glCallList(playerDisplayList);     	
     }    
+ 
+ private void enemyGenerator(){
+	 
+	 
+	 
+	 enemyCams.add(setUpCameraEnemy(200f, 300f));
+	 enemyCams.add(setUpCameraEnemy(40f, 33f));
+	 enemyCams.add(setUpCameraEnemy(-50f, 30f));
+	 enemyCams.add(setUpCameraEnemy(20f, -30f));
+	 
+ }
+ 
     private void moveEnemies(Camera cam){   
     	
     	float playerx=playerCam.x();
@@ -285,16 +292,15 @@ public class GameEngine {
     }
     
     
-    private  Camera setUpCameraEnemy() {
-        enemyCam = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
+    private  Camera setUpCameraEnemy(float f, float g) {
+        EulerCamera enemyCam = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
                 .setRotation(-1.12f, 0.16f, 0f).setPosition(-1.38f, 1.36f, 7.95f).setFieldOfView(60).build();
         enemyCam.applyOptimalStates();
         enemyCam.applyPerspectiveMatrix();
-        enemyCam.setPosition(0.f, 30f, 0.f);
+        enemyCam.setPosition(f, 30f, g);
         enemyCam.setRotation(100f,0.16057983f, 0);  //80.0 0.16057983 0.0: pitch, yaw, roll:we want to be looking down
         return enemyCam;
-       // playerCam.applyPerspectiveMatrix();
-       // playerCam.setFieldOfView(120f);
+       
     }
     private  Camera makeWeaponCam() {
     	Camera weaponCam = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
@@ -316,22 +322,12 @@ public class GameEngine {
     }
 
     
-    
-    
-    
-    
-    
-    
-    
-    
     private static void setUpStates() {    
     	angle=0;
     	tick=0;
     	weaponCams=new Vector<Camera>();
-        //        glEnable(GL_DEPTH_TEST);
-        //        glEnable(GL_LIGHTING);
-        //        glEnable(GL_BLEND);
-        //        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    	enemyCams=new Vector<Camera>();
+       
     }
 
     private void update() {
@@ -343,7 +339,7 @@ public class GameEngine {
 
     private void enterGameLoop() {
     	
-    	//initGL(); // init OpenGL
+    	
 		getTimeElapsed(); // call once before loop to initialise lastFrame
 		lastFPS = getTime(); // call before loop to initialise fps timer
 		
@@ -463,7 +459,8 @@ public class GameEngine {
         engine.setUpStates();
         engine.setUpMatrices();
         engine.setUpCameraPlayer();
-        engine.setUpCameraEnemy();
+        
+        engine.enemyGenerator();
         engine.enterGameLoop();
         engine.cleanUp(false);
     }
