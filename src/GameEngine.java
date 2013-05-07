@@ -32,6 +32,12 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
+import actions.ActionDemo;
+import de.matthiasmann.twl.GUI;
+import de.matthiasmann.twl.renderer.lwjgl.LWJGLRenderer;
+import de.matthiasmann.twl.theme.ThemeManager;
+
+import test.TestUtils;
 import utility.Camera;
 import utility.EulerCamera;
 import utility.Model;
@@ -114,7 +120,7 @@ public class GameEngine {
     
     private void moveDude(){
     	playerCam.setPosition(x,playerCam.y(),z);
-        playerCam.applyTranslations();    	
+        playerCam.applyTranslations();
     }
     
     
@@ -447,14 +453,39 @@ public class GameEngine {
 	private float coTangent(float angle) {
 		return (float)(1f / Math.tan(angle));
 	}
+	
+	public static void initGUI() throws LWJGLException, IOException{
+    	LWJGLRenderer renderer = new LWJGLRenderer();
+        ActionDemo demo = new ActionDemo();
+        GUI gui = new GUI(demo, renderer);
+        
+        demo.requestKeyboardFocus();
+
+        ThemeManager theme = ThemeManager.createThemeManager(
+                ActionDemo.class.getResource("actiondemo.xml"), renderer);
+        gui.applyTheme(theme);
+        
+
+        //while(!Display.isCloseRequested() && !demo.quit) {
+        while(!demo.start) {
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+
+            gui.update();
+            Display.update();
+            TestUtils.reduceInputLag();
+        }
+
+        gui.destroy();
+        theme.destroy();
+    }
     
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws LWJGLException, IOException {
     	GameEngine engine = new GameEngine();
     	
     	
-    	
         engine.setUpDisplay();
+        initGUI();
         engine.setUpDisplayListPlayer();
         engine.setUpStates();
         engine.setUpMatrices();
