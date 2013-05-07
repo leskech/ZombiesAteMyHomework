@@ -53,7 +53,8 @@ public class GameEngine {
 	long lastFPS;//fps at last frame
 	private static int playerDisplayList;
     private static String playerPath="obj/malefromabove.obj";
-    private static Camera camera;
+    private static Camera playerCam;
+    private static Camera enemyCam;
     static double angle;
 	private float[] distance=new float[50];
 	private float dist=0;
@@ -83,40 +84,62 @@ public class GameEngine {
          GL11.glColor3f(0.5f,0.5f,1.0f);
          GL11.glShadeModel(GL11.GL_SMOOTH);
          glLoadIdentity();
-      
-         
-         camera.setPosition(x,camera.y(),z);
-         camera.applyTranslations();
-       //  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-         
-         
-         GL11.glScalef(.2f, .2f, .2f);
-         GL11.glRotated(angle, 0, 1, 0);
+              
+         moveDude();
+         GL11.glScalef(.1f, .1f, .1f);//scale dude
          renderDude();
-         moveEnemies();
+         
+         glLoadIdentity();
+         
+        
+         
+        
+         
+         moveEnemies(enemyCam);         
+         GL11.glScalef(.1f, .1f, .1f);        
          renderEnemies();
          
     }
 
     
     private void renderDude(){    
-    	
-    	
-    	
     	glCallList(playerDisplayList);  
-    	
+   }
+    
+    private void moveDude(){
+    	playerCam.setPosition(x,playerCam.y(),z);
+        playerCam.applyTranslations();    	
     }
     
     
     
     
-    private void initializeEnemies(){
+ private void renderEnemies(){    	     	
+    	GL11.glColor3f(0.0f, 1.2f, 0.0f);       	
+    	glCallList(playerDisplayList);     	
+    }    
+    private void moveEnemies(Camera cam){   
     	
-    	for(int f=0;f<distance.length;f++){    		
-    		distance[f]=600;   		
-    	}
+    	float playerx=playerCam.x();
+    	float playerz=playerCam.z();
     	
+    	
+    	float enemyx=cam.x();
+    	float enemyz=cam.z();
+    	
+    	if(playerx > enemyx)enemyx+=.05f;
+    	else enemyx-=.051f;
+    	
+    	if(playerz > enemyz)enemyz+=.05f;
+    	else enemyz-=.05f;
+    	
+    	
+    	cam.setPosition(enemyx, cam.y(), enemyz);
+    	
+    	
+    	cam.applyTranslations();
     }
+    
     
     
     
@@ -128,8 +151,8 @@ public class GameEngine {
     }
 
     private void input(int delta) {
-    	  x=camera.x();
-          z=camera.z();
+    	  x=playerCam.x();
+          z=playerCam.z();
     	
        
     	if (Keyboard.isKeyDown(Keyboard.KEY_A))x += 0.05f * delta;
@@ -139,22 +162,22 @@ public class GameEngine {
 		if (Keyboard.isKeyDown(Keyboard.KEY_S))z -= 0.05f * delta;
 	
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_1))System.out.println("Camera Angle:"+camera.pitch() +" "+camera.yaw() + " "+camera.roll());
-		if(Keyboard.isKeyDown(Keyboard.KEY_2))System.out.println("Camera Position:"+camera.x()	+" "+camera.y() + " "+camera.z());	
-		if(Keyboard.isKeyDown(Keyboard.KEY_3))System.out.println("Player Position:"+camera.x()	+" "+camera.y() + " "+camera.z());	
+		if(Keyboard.isKeyDown(Keyboard.KEY_1))System.out.println("Camera Angle:"+playerCam.pitch() +" "+playerCam.yaw() + " "+playerCam.roll());
+		if(Keyboard.isKeyDown(Keyboard.KEY_2))System.out.println("Camera Position:"+playerCam.x()	+" "+playerCam.y() + " "+playerCam.z());	
+		if(Keyboard.isKeyDown(Keyboard.KEY_3))System.out.println("Player Position:"+playerCam.x()	+" "+playerCam.y() + " "+playerCam.z());	
 		
 		angle=getAngleBetween(x,z,Mouse.getX(), Mouse.getY());
 		
 		//if(Mouse.isButtonDown(0))d++;
 		//if(Mouse.isButtonDown(1))d--;	
-		// camera.processMouse(1, 80, -80);
-	       // camera.processKeyboard(getTimeElapsed()+1, 50, 50, 50);
+		// playerCam.processMouse(1, 80, -80);
+	    //    enemyCam.processKeyboard(getTimeElapsed()+1, 50, 0, 50);
 	     
-			if (Mouse.isButtonDown(0)) {
-	            Mouse.setGrabbed(true);
-	        } else if (Mouse.isButtonDown(1)) {
-	            Mouse.setGrabbed(false);
-	        }
+			//if (Mouse.isButtonDown(0)) {
+	      //      Mouse.setGrabbed(true);
+	       // } else if (Mouse.isButtonDown(1)) {
+	        //    Mouse.setGrabbed(false);
+	       // }
 	     
     }
 
@@ -165,17 +188,32 @@ public class GameEngine {
     }
 
     
-    private  void setUpCamera() {
-        camera = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
+    private  void setUpCameraPlayer() {
+        playerCam = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
                 .setRotation(-1.12f, 0.16f, 0f).setPosition(-1.38f, 1.36f, 7.95f).setFieldOfView(60).build();
-        camera.applyOptimalStates();
-        camera.applyPerspectiveMatrix();
-        camera.setPosition(0.f, 30f, 0.f);
-        camera.setRotation(100f,0.16057983f, 0);  //80.0 0.16057983 0.0: pitch, yaw, roll:we want to be looking down
+        playerCam.applyOptimalStates();
+        playerCam.applyPerspectiveMatrix();
+        playerCam.setPosition(0.f, 30f, 0.f);
+        playerCam.setRotation(100f,0.16057983f, 0);  //80.0 0.16057983 0.0: pitch, yaw, roll:we want to be looking down
       
-       // camera.applyPerspectiveMatrix();
-       // camera.setFieldOfView(120f);
+       // playerCam.applyPerspectiveMatrix();
+       // playerCam.setFieldOfView(120f);
     }
+    
+    
+    private  Camera setUpCameraEnemy() {
+        enemyCam = new EulerCamera.Builder().setAspectRatio((float) Display.getWidth() / Display.getHeight())
+                .setRotation(-1.12f, 0.16f, 0f).setPosition(-1.38f, 1.36f, 7.95f).setFieldOfView(60).build();
+        enemyCam.applyOptimalStates();
+        enemyCam.applyPerspectiveMatrix();
+        enemyCam.setPosition(0.f, 30f, 0.f);
+        enemyCam.setRotation(100f,0.16057983f, 0);  //80.0 0.16057983 0.0: pitch, yaw, roll:we want to be looking down
+        return enemyCam;
+       // playerCam.applyPerspectiveMatrix();
+       // playerCam.setFieldOfView(120f);
+    }
+    
+    
     
     
     private void setUpMatrices() {
@@ -342,7 +380,8 @@ public class GameEngine {
         engine.setUpDisplayListPlayer();
         engine.setUpStates();
         engine.setUpMatrices();
-        engine.setUpCamera();
+        engine.setUpCameraPlayer();
+        engine.setUpCameraEnemy();
         engine.enterGameLoop();
         engine.cleanUp(false);
     }
@@ -368,33 +407,7 @@ public class GameEngine {
     
     
     
-    private void renderEnemies(){
-	 	
-    	tickDistance(); 
-    	
-    	
-    	GL11.glColor3f(0.0f, 1.2f, 0.0f);    	
-    	//for(int f=0;f<distance.length;f++){  
-    		
-    	GL11.glTranslatef(dist, 0, dist);   	
-    	glCallList(playerDisplayList);    
-    
-    	
-    }
-    
-    
-    
-    private void tickDistance(){
-    	//for(float f:distance)   	
-    	if(dist<=0)dist=(float)Math.random()*10*100;  
-    	else dist--;   	
-    }
-    
-    private void moveEnemies(){
-    	GL11.glTranslatef(d, 0, d);
-    }
-    
-    
+   
     
     
     

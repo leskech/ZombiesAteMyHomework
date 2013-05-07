@@ -183,7 +183,7 @@ public class TheQuadExampleMoving {
         reader.close();
 		
         VertexData[] verts = new VertexData[vlist.size()];
-        for(int v=0;v<verts.length;v++)verts[v]=vlist.elementAt(v);
+        for(int v=0;v<verts.length;v++){verts[v]=vlist.elementAt(v);System.out.println(vlist.get(v).getXYZ()[0]);}
 		return verts;
 		
 	}
@@ -196,7 +196,8 @@ public class TheQuadExampleMoving {
         float y = Float.valueOf(xyz[2]);
         float z = Float.valueOf(xyz[3]);
         VertexData v = new VertexData();
-        v.setXYZ(x, y, z);       
+        v.setXYZ(x, y, z); 
+        v.setRGB(1, 0, 0); v.setST(0, 0);
         return v;
     }
 	
