@@ -27,7 +27,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package actions;
+
 
 import de.matthiasmann.twl.ActionMap.Action;
 import de.matthiasmann.twl.FPSCounter;
@@ -44,24 +44,24 @@ import test.TestUtils;
 public class ActionDemo extends Widget {
 
     //private final FPSCounter fpsCounter;
-    //private final Label instructions;
+    private final Label instructions;
     //private final Label result;
     public boolean quit;
     public boolean start = false;
 
-    @SuppressWarnings("LeakingThisInConstructor")
-    public ActionDemo() {
-        /*fpsCounter = new FPSCounter();
-        add(fpsCounter);
+    //@SuppressWarnings("LeakingThisInConstructor")
+    public ActionDemo(GameEngine engine) {
+        //fpsCounter = new FPSCounter();
+        //add(fpsCounter);
 
         instructions = new Label();
         instructions.setTheme("instructions");
-        instructions.setText("ZOMBIES ATE MY HOMEWORK -- PRESS SPACE TO DIE");
+        instructions.setText(engine.getEnemiesKilled());
         add(instructions);
         
-        result = new Label();
-        result.setTheme("result");
-        add(result);*/
+       // result = new Label();
+        //result.setTheme("result");
+      //  add(result);
         
         getOrCreateActionMap().addMapping(this);
         
@@ -74,21 +74,21 @@ public class ActionDemo extends Widget {
         start=true;
     }
     
-    //@Override
-    /*protected void layout() {
+    @Override
+    protected void layout() {
         // instructions are near the top 
         instructions.setSize(getInnerWidth(), instructions.getPreferredHeight());
         instructions.setPosition(getInnerX(), getInnerY() + 20);
         
         // result is in the screen center
-        result.setSize(getInnerWidth(), result.getPreferredHeight());
-        result.setPosition(getInnerX(), getInnerY() + (getInnerHeight() - result.getHeight())/2);
+        //result.setSize(getInnerWidth(), result.getPreferredHeight());
+        //result.setPosition(getInnerX(), getInnerY() + (getInnerHeight() - result.getHeight())/2);
         
         // fpsCounter is bottom right
-        fpsCounter.adjustSize();
-        fpsCounter.setPosition(
-                getInnerWidth() - fpsCounter.getWidth(),
-                getInnerHeight() - fpsCounter.getHeight());
-    }*/
+        //fpsCounter.adjustSize();
+        //fpsCounter.setPosition(
+                //getInnerWidth() - fpsCounter.getWidth(),
+                //getInnerHeight() - fpsCounter.getHeight());
+    }
 
 }
