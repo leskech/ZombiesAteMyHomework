@@ -1,18 +1,35 @@
 
+import static org.lwjgl.opengl.GL11.GL_BACK;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_COLOR_MATERIAL;
 import static org.lwjgl.opengl.GL11.GL_COMPILE;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_DIFFUSE;
+import static org.lwjgl.opengl.GL11.GL_FRONT;
+import static org.lwjgl.opengl.GL11.GL_LIGHT0;
+import static org.lwjgl.opengl.GL11.GL_LIGHTING;
+import static org.lwjgl.opengl.GL11.GL_LIGHT_MODEL_AMBIENT;
+import static org.lwjgl.opengl.GL11.GL_POSITION;
+import static org.lwjgl.opengl.GL11.GL_SMOOTH;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11.glBegin;
 import static org.lwjgl.opengl.GL11.glCallList;
 import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glColorMaterial;
+import static org.lwjgl.opengl.GL11.glCullFace;
 import static org.lwjgl.opengl.GL11.glDeleteLists;
+import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glEnd;
 import static org.lwjgl.opengl.GL11.glEndList;
 import static org.lwjgl.opengl.GL11.glGenLists;
+import static org.lwjgl.opengl.GL11.glLight;
+import static org.lwjgl.opengl.GL11.glLightModel;
 import static org.lwjgl.opengl.GL11.glLoadIdentity;
 import static org.lwjgl.opengl.GL11.glNewList;
 import static org.lwjgl.opengl.GL11.glNormal3f;
+import static org.lwjgl.opengl.GL11.glShadeModel;
 import static org.lwjgl.opengl.GL11.glVertex3f;
 
 import java.io.File;
@@ -38,6 +55,7 @@ import de.matthiasmann.twl.renderer.lwjgl.LWJGLRenderer;
 import de.matthiasmann.twl.theme.ThemeManager;
 
 import test.TestUtils;
+import utility.BufferTools;
 import utility.Camera;
 import utility.EulerCamera;
 import utility.Model;
@@ -61,25 +79,25 @@ public class GameEngine {
 	int fps;//frames per second
 	long lastFPS;//fps at last frame
 	private static int playerDisplayList;
+	private static int bunnyDisplayList;
     private static String playerPath="obj/malefromabove.obj";
+    private static String bunnyPath="obj/bunny1.obj";
     private static Camera playerCam;
    // private static Camera enemyCam;
     private static Vector<Camera> enemyCams;
     
     
-    private static Vector<Camera> weaponCams;
+    private static Vector<Weapon> weapons;
     
-    private boolean wxleft, wzup, wxright, wzdown;
+    private final int enemyct=99;
     
     
     static double angle;
 	private float[] distance=new float[50];
 	private float dist=0;
 	private final double PI = 3.14159265358979323846;
-
 	private static int tick;
-	
-
+	private static boolean canShoot;
 	
     private void render() {
     	
@@ -96,10 +114,10 @@ public class GameEngine {
          renderDude();
          
          
-         for(Camera w:weaponCams){
+         for(Weapon w:weapons){
         	 glLoadIdentity();       	 
-        	 moveWeapon((EulerCamera)w);
-        	 GL11.glScalef(.1f, .1f, .1f);//scale dude
+        	 moveWeapon(w);
+        	 GL11.glScalef(.01f, .01f, .01f);//scale dude
              renderWeapon();       	 
          }
          for(Camera w:enemyCams){
@@ -109,12 +127,33 @@ public class GameEngine {
              renderEnemies();       	 
          }
         
+         for(Camera e:enemyCams){
+        	 for(Weapon w:weapons){
+        		 if(collided(w,e)){
+        			 e.setPosition(99, 99, 99);
+        			 w.w.setPosition(99,99, 99);
+        			 
+        			 
+        		 }
+        		 
+        		 
+        	 }
+        	 
+         }
+         
+         
+         
+         
+         
+         
+         
         
     }
 
     
     private void renderDude(){    
     	GL11.glColor3f(0.5f,0.5f,1.0f);
+    	
     	glCallList(playerDisplayList);  
    }
     
@@ -127,28 +166,19 @@ public class GameEngine {
     
     private void renderWeapon(){
     	GL11.glColor3f(1f, 0f, 0.0f); 
-    	glCallList(playerDisplayList);      	
+    	glCallList(bunnyDisplayList);      	
     }
     
-    private void moveWeapon(EulerCamera cam){
+    private void moveWeapon(Weapon w){
     	
-    	if(wxright && cam.tick > 0)cam.setPosition(cam.x()-1, cam.y(), cam.z());
-    	if(wxleft&& cam.tick > 0)cam.setPosition(cam.x()+1, cam.y(), cam.z());    	
-    	if(wzup&& cam.tick > 0)cam.setPosition(cam.x(), cam.y(), cam.z()+1);
-    	if(wzdown&& cam.tick > 0)cam.setPosition(cam.x(), cam.y(), cam.z()-1);
+    	if(w.wxright && w.w.tick > 0)w.w.setPosition(w.w.x()-1, w.w.y(), w.w.z());
+    	if(w.wxleft&& w.w.tick > 0)w.w.setPosition(w.w.x()+1, w.w.y(), w.w.z());    	
+    	if(w.wzup&& w.w.tick > 0)w.w.setPosition(w.w.x(), w.w.y(), w.w.z()+1);
+    	if(w.wzdown&& w.w.tick > 0)w.w.setPosition(w.w.x(), w.w.y(), w.w.z()-1);
     		
+    	if((!w.wxright && !w.wxleft && !w.wzup && !w.wzdown))w.w.setPosition(99f,99f,99f);
     	
-    	
-    	
-    	if((!wxright && !wxleft && !wzup && !wzdown))cam.setPosition(99f,99f,99f);
-    	
-    	
-    	
-    	cam.applyTranslations();
-    	
-    	
-    	
-    	
+    	w.w.applyTranslations();
     	
     }
     
@@ -159,13 +189,17 @@ public class GameEngine {
     }    
  
  private void enemyGenerator(){
+	 for(int i=0;i<enemyct;i++){
+		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()), (float)(-100f*Math.random())));
+		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()), (float)(100f*Math.random())));
+		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()), (float)(-100f*Math.random())));
+		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()), (float)(100f*Math.random())));
+	 }
 	 
 	 
+	
 	 
-	 enemyCams.add(setUpCameraEnemy(200f, 300f));
-	 enemyCams.add(setUpCameraEnemy(40f, 33f));
-	 enemyCams.add(setUpCameraEnemy(-50f, 30f));
-	 enemyCams.add(setUpCameraEnemy(20f, -30f));
+	
 	 
  }
  
@@ -192,18 +226,19 @@ public class GameEngine {
     }
     
     
-    
-    private void weaponTick(EulerCamera cam){
-    	if(cam.tick <=0){    		
-    		wzup=false;
-            wzdown=false;
-            wxleft=false;
-            wxright=false;   		
-    		cam.tick=0;
-    	}else{
-    		
-    		cam.tick--;
-    		
+    private void shotTimerTick(){
+    	if(tick <=0 )canShoot=true;
+    	else{  tick--;}   	
+    }
+    private void weaponTick(Weapon w){
+    	if(w.w.tick <=0){    		
+    		w.wzup=false;
+            w.wzdown=false;
+            w.wxleft=false;
+            w.wxright=false;   		
+    		w.w.tick=0;
+    	}else{    		
+    		w.w.tick--;    		
     	}
     	
     	
@@ -220,35 +255,41 @@ public class GameEngine {
           z=playerCam.z();
           
           
-         for(Camera w:weaponCams)weaponTick((EulerCamera)w);
+         for(Weapon w:weapons)       	 
+        	 weaponTick(w);
+         shotTimerTick();
           
           
           
-          
-          if (Keyboard.isKeyDown(Keyboard.KEY_UP) ){
-        	  wzup=true;
-        	  EulerCamera w;
-        	  w= (EulerCamera) makeWeaponCam();
-        	  w.tick=40;
-        	  weaponCams.add(w);}
-          if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)){
-        	  wxleft=true; 
-        	  EulerCamera w;
-        	  w= (EulerCamera) makeWeaponCam();
-        	  w.tick=40;
-        	  weaponCams.add(w);}
-          if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)){
-        	  wxright=true;
-        	  EulerCamera w;
-        	  w= (EulerCamera) makeWeaponCam();
-        	  w.tick=40;
-        	  weaponCams.add(w);}
-          if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)){
-        	  wzdown=true;
-        	  EulerCamera w;
-        	  w= (EulerCamera) makeWeaponCam();
-        	  w.tick=40;
-        	  weaponCams.add(w);}
+          if (Keyboard.isKeyDown(Keyboard.KEY_UP) && canShoot){
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());       	  
+        	  wep.wzup=true; 
+        	  wep.w.tick=70;
+        	  weapons.add(wep);
+        	  tick=1;
+        	  canShoot= false;
+          }
+          if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)&& canShoot){
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  wep.wxleft=true;         	 
+        	  wep.w.tick=70;
+        	  weapons.add(wep);
+        	  tick=1;
+        	  canShoot= false;}
+          if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)&& canShoot){
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  wep.wxright=true;         	 
+        	  wep.w.tick=70;
+        	  weapons.add(wep);
+        	  tick=1;
+        	  canShoot= false;}
+          if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)&& canShoot){
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  wep.wzdown=true;         	 
+        	  wep.w.tick=70;
+        	  weapons.add(wep);
+        	  tick=1;
+        	  canShoot= false;}
           
           
        
@@ -329,9 +370,8 @@ public class GameEngine {
 
     
     private static void setUpStates() {    
-    	angle=0;
-    	tick=0;
-    	weaponCams=new Vector<Camera>();
+    	angle=0; tick=0;   canShoot=true;
+    	weapons=new Vector<Weapon>();
     	enemyCams=new Vector<Camera>();
        
     }
@@ -359,6 +399,10 @@ public class GameEngine {
         }
     }
 
+    
+    
+    
+    
     
     private  void setUpDisplayListPlayer() {
        playerDisplayList = glGenLists(1);
@@ -399,6 +443,66 @@ public class GameEngine {
     
     
     
+    private  void setUpDisplayListBunny() {
+    	bunnyDisplayList = glGenLists(1);
+        
+         glNewList(bunnyDisplayList, GL_COMPILE);
+         {
+             Model m = null;
+             try {
+                 m = OBJLoader.loadModel(new File(bunnyPath));
+             } catch (FileNotFoundException e) {
+                 e.printStackTrace();
+                 Display.destroy();
+                 System.exit(1);
+             } catch (IOException e) {
+                 e.printStackTrace();
+                 Display.destroy();
+                 System.exit(1);
+             }
+             glBegin(GL_TRIANGLES);
+             for (Model.Face face : m.getFaces()) {
+                 Vector3f n1 = m.getNormals().get(face.getNormalIndices()[0] - 1);
+                 glNormal3f(n1.x, n1.y, n1.z);
+                 Vector3f v1 = m.getVertices().get(face.getVertexIndices()[0] - 1);
+                 glVertex3f(v1.x, v1.y, v1.z);
+                 Vector3f n2 = m.getNormals().get(face.getNormalIndices()[1] - 1);
+                 glNormal3f(n2.x, n2.y, n2.z);
+                 Vector3f v2 = m.getVertices().get(face.getVertexIndices()[1] - 1);
+                 glVertex3f(v2.x, v2.y, v2.z);
+                 Vector3f n3 = m.getNormals().get(face.getNormalIndices()[2] - 1);
+                 glNormal3f(n3.x, n3.y, n3.z);
+                 Vector3f v3 = m.getVertices().get(face.getVertexIndices()[2] - 1);
+                 glVertex3f(v3.x, v3.y, v3.z);
+             }
+             glEnd();
+         }
+         glEndList();
+     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    private boolean collided(Weapon w, Camera e){
+    	float weaponX=w.w.x();
+    	float weaponZ=w.w.z();
+    	
+    	float enemyX=e.x();
+    	float enemyZ=e.z();
+    	   	
+    	if(weaponX - enemyX > 1  || weaponX-enemyX <-1 )return false;
+    	if(weaponZ - enemyZ > 1 || weaponZ-enemyZ <-1 )return false;
+    	
+    	return true;
+    	
+    }
     
     
     
@@ -454,6 +558,23 @@ public class GameEngine {
 		return (float)(1f / Math.tan(angle));
 	}
 	
+	
+	
+	 private  void setUpLighting() {
+	        glShadeModel(GL_SMOOTH);
+	        glEnable(GL_DEPTH_TEST);
+	        glEnable(GL_LIGHTING);
+	        glEnable(GL_LIGHT0);
+	        glLightModel(GL_LIGHT_MODEL_AMBIENT, BufferTools.asFlippedFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
+	        glLight(GL_LIGHT0, GL_POSITION, BufferTools.asFlippedFloatBuffer(new float[]{0, 0, 0, 1}));
+	        glEnable(GL_CULL_FACE);
+	        glCullFace(GL_BACK);
+	        glEnable(GL_COLOR_MATERIAL);
+	        glColorMaterial(GL_FRONT, GL_DIFFUSE);
+	    }
+	
+	
+	
 	public static void initGUI() throws LWJGLException, IOException{
     	LWJGLRenderer renderer = new LWJGLRenderer();
         ActionDemo demo = new ActionDemo();
@@ -487,7 +608,9 @@ public class GameEngine {
         engine.setUpDisplay();
         initGUI();
         engine.setUpDisplayListPlayer();
+        engine.setUpDisplayListBunny();
         engine.setUpStates();
+       // engine.setUpLighting();
         engine.setUpMatrices();
         engine.setUpCameraPlayer();
         

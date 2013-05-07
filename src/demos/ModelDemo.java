@@ -35,6 +35,8 @@ import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
+
+import utility.BufferTools;
 import utility.Camera;
 import utility.EulerCamera;
 import utility.Model;
@@ -57,7 +59,7 @@ public class ModelDemo {
 
     private static Camera camera;
     private static int bunnyDisplayList;
-    private static String filepath = "obj/malefromabove.obj";
+    private static String filepath = "obj/bunny1.obj";
 
     public static void main(String[] args) {
         setUpDisplay();
@@ -127,7 +129,7 @@ public class ModelDemo {
     private static void render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         GL11.glColor3f(0.5f,0.5f,1.0f);
-        GL11.glShadeModel(GL11.GL_SMOOTH);
+        GL11.glShadeModel(GL11.GL_DEPTH_BITS);
         glLoadIdentity();
         camera.applyTranslations();
       //  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -143,6 +145,25 @@ public class ModelDemo {
         camera.applyPerspectiveMatrix();
     }
 
+    
+    
+    private static void setUpLighting() {
+        glShadeModel(GL_SMOOTH);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        glLightModel(GL_LIGHT_MODEL_AMBIENT, BufferTools.asFlippedFloatBuffer(new float[]{0.05f, 0.05f, 0.05f, 1f}));
+        glLight(GL_LIGHT0, GL_POSITION, BufferTools.asFlippedFloatBuffer(new float[]{0, 0, 0, 1}));
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT, GL_DIFFUSE);
+    }
+    
+    
+    
+    
+    
     private static void setUpDisplay() {
         try {
             Display.setDisplayMode(new DisplayMode(640, 480));
