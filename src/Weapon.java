@@ -8,16 +8,12 @@ public class Weapon {
 	public boolean wxleft;
 	public boolean wxright;   	
 	public EulerCamera w;
+	public boolean hitTarget;
 	
 	public Weapon(EulerCamera cam){
 		w=cam;		
 		
 		
 	}
-	
-	
-	
-	
-	
 	
 }

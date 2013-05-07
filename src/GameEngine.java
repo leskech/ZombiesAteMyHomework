@@ -48,6 +48,9 @@ import org.lwjgl.opengl.DisplayMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import org.newdawn.slick.Music;
+import org.newdawn.slick.SlickException;
+import org.newdawn.slick.Sound;
 
 import actions.ActionDemo;
 import de.matthiasmann.twl.GUI;
@@ -80,23 +83,30 @@ public class GameEngine {
 	long lastFPS;//fps at last frame
 	private static int playerDisplayList;
 	private static int bunnyDisplayList;
+	private static int birdyDisplayList;
+
     private static String playerPath="obj/malefromabove.obj";
     private static String bunnyPath="obj/bunny1.obj";
+    private static String birdyPath="obj/birdy.obj";
     private static Camera playerCam;
    // private static Camera enemyCam;
-    private static Vector<Camera> enemyCams;
-    
+    private static Vector<Zombie> enemies;
+    private static boolean playerDead;
     
     private static Vector<Weapon> weapons;
     
     private final int enemyct=99;
+    
+    private static Music game;
+    private static Sound gun;
+    private static Sound zombieDie;
     
     
     static double angle;
 	private float[] distance=new float[50];
 	private float dist=0;
 	private final double PI = 3.14159265358979323846;
-	private static int tick;
+	private static int tick, powerupTick;
 	private static boolean canShoot;
 	
     private void render() {
@@ -115,25 +125,32 @@ public class GameEngine {
          
          
          for(Weapon w:weapons){
+        	 if(w.w.tick > 0 && !w.hitTarget){
         	 glLoadIdentity();       	 
         	 moveWeapon(w);
         	 GL11.glScalef(.01f, .01f, .01f);//scale dude
-             renderWeapon();       	 
+             renderWeapon();  
+        	 }
          }
-         for(Camera w:enemyCams){
+         for(Zombie z:enemies){
+        	 if(!z.isDead){
         	 glLoadIdentity();       	 
-        	 moveEnemies((EulerCamera)w);
+        	 moveEnemy(z.z);
         	 GL11.glScalef(.1f, .1f, .1f);//scale dude
-             renderEnemies();       	 
+             renderEnemy(); 
+             }      	 
          }
         
-         for(Camera e:enemyCams){   		 
+         for(Zombie z:enemies){   
+        	 if(collided(z.z,playerCam) && !playerDead && !z.isDead){playerDead=true;}
+        	 
+        	 
         	 for(Weapon w:weapons){
-        		 if(collided(w.w,e)){
-        			 e.setPosition(99, 99, 99);
-        			 w.w.tick=0;
-        			 
-        			 
+        		 if(collided(w.w,z.z) && !z.isDead && !w.hitTarget){
+        			 zombieDie.play();
+        			 w.hitTarget=true;
+        			 z.isDead=true;
+        					 
         		 }
         		 
         		 
@@ -174,36 +191,29 @@ public class GameEngine {
     	if(w.wxright && w.w.tick > 0)w.w.setPosition(w.w.x()-1, w.w.y(), w.w.z());
     	if(w.wxleft&& w.w.tick > 0)w.w.setPosition(w.w.x()+1, w.w.y(), w.w.z());    	
     	if(w.wzup&& w.w.tick > 0)w.w.setPosition(w.w.x(), w.w.y(), w.w.z()+1);
-    	if(w.wzdown&& w.w.tick > 0)w.w.setPosition(w.w.x(), w.w.y(), w.w.z()-1);
-    		
-    	if((!w.wxright && !w.wxleft && !w.wzup && !w.wzdown))w.w.setPosition(99f,99f,99f);
-    	
+    	if(w.wzdown&& w.w.tick > 0)w.w.setPosition(w.w.x(), w.w.y(), w.w.z()-1);    		
     	w.w.applyTranslations();
     	
     }
     
     
- private void renderEnemies(){    	     	
+ private void renderEnemy(){    	     	
     	GL11.glColor3f(0.0f, 1.2f, 0.0f);       	
     	glCallList(playerDisplayList);     	
     }    
  
  private void enemyGenerator(){
 	 for(int i=0;i<enemyct;i++){
-		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(-100f*Math.random()*1)));
-		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(100f*Math.random()*1)));
-		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()*1), (float)(-100f*Math.random()*1)));
-		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()*1), (float)(100f*Math.random()*1)));
+		 enemies.add(new Zombie((EulerCamera) setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(-100f*Math.random()*1))));
+		 enemies.add(new Zombie((EulerCamera)setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(100f*Math.random()*1))));
+		 enemies.add(new Zombie((EulerCamera)setUpCameraEnemy((float)(100f*Math.random()*1), (float)(-100f*Math.random()*1))));
+		 enemies.add(new Zombie((EulerCamera)setUpCameraEnemy((float)(100f*Math.random()*1), (float)(100f*Math.random()*1))));
 	 }
-	 
-	 
-	
-	 
-	
+	 for(Zombie z:enemies)z.isDead=false;
 	 
  }
  
-    private void moveEnemies(Camera cam){   
+    private void moveEnemy(Camera cam){   
     	
     	float playerx=playerCam.x();
     	float playerz=playerCam.z();
@@ -240,11 +250,8 @@ public class GameEngine {
     	}else{    		
     		w.w.tick--;    		
     	}
-    	
-    	
     }
-    
-   
+
     
     private static void logic() {
         // Add logic code here
@@ -262,34 +269,39 @@ public class GameEngine {
           
           
           if (Keyboard.isKeyDown(Keyboard.KEY_UP) && canShoot){
-        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());       	  
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());       
+        	  wep.hitTarget=false;
         	  wep.wzup=true; 
         	  wep.w.tick=70;
         	  weapons.add(wep);
         	  tick=20;
         	  canShoot= false;
-          }
+        	  gun.play();}
           if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)&& canShoot){
         	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  wep.hitTarget=false;
         	  wep.wxleft=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
         	  tick=20;
-        	  canShoot= false;}
+        	  canShoot= false;
+        	  gun.play();}
           if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)&& canShoot){
-        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());wep.hitTarget=false;
         	  wep.wxright=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
         	  tick=20;
-        	  canShoot= false;}
+        	  canShoot= false;
+        	  gun.play();}
           if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)&& canShoot){
-        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
+        	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());wep.hitTarget=false;
         	  wep.wzdown=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
         	  tick=20;
-        	  canShoot= false;}
+        	  canShoot= false;
+        	  gun.play();}
           
           
        
@@ -370,9 +382,9 @@ public class GameEngine {
 
     
     private  void setUpStates() {    
-    	angle=0; tick=0;   canShoot=true;
+    	angle=0; tick=0; powerupTick=50;  canShoot=true; playerDead=false;
     	weapons=new Vector<Weapon>();
-    	enemyCams=new Vector<Camera>();
+    	enemies=new Vector<Zombie>();
        
     }
 
@@ -383,20 +395,37 @@ public class GameEngine {
         
     }
 
-    private void enterGameLoop() {
+    private void enterGameLoop() throws LWJGLException, IOException {
     	
     	
 		getTimeElapsed(); // call once before loop to initialise lastFrame
 		lastFPS = getTime(); // call before loop to initialise fps timer
 		
         while (!Display.isCloseRequested()) {
+        	if(!playerDead){
         	int delta = getTimeElapsed();    	
         	logic();
         	render();
             input(delta);
             update();
           
-        }
+        
+    	}else{
+    		
+    		game.stop();
+    		setUpStates();
+            initGUI();
+            setUpDisplayListPlayer();
+            setUpDisplayListBunny();
+           // engine.setUpLighting();
+            setUpMatrices();
+            setUpCameraPlayer();
+            game.loop();
+            enemyGenerator();
+    	}
+        
+    	
+    	}
     }
 
     
@@ -484,7 +513,42 @@ public class GameEngine {
     
     
     
-    
+    private  void setUpDisplayListBirdy() {
+    	birdyDisplayList = glGenLists(1);
+        
+         glNewList(birdyDisplayList, GL_COMPILE);
+         {
+             Model m = null;
+             try {
+                 m = OBJLoader.loadModel(new File(birdyPath));
+             } catch (FileNotFoundException e) {
+                 e.printStackTrace();
+                 Display.destroy();
+                 System.exit(1);
+             } catch (IOException e) {
+                 e.printStackTrace();
+                 Display.destroy();
+                 System.exit(1);
+             }
+             glBegin(GL_TRIANGLES);
+             for (Model.Face face : m.getFaces()) {
+                 Vector3f n1 = m.getNormals().get(face.getNormalIndices()[0] - 1);
+                 glNormal3f(n1.x, n1.y, n1.z);
+                 Vector3f v1 = m.getVertices().get(face.getVertexIndices()[0] - 1);
+                 glVertex3f(v1.x, v1.y, v1.z);
+                 Vector3f n2 = m.getNormals().get(face.getNormalIndices()[1] - 1);
+                 glNormal3f(n2.x, n2.y, n2.z);
+                 Vector3f v2 = m.getVertices().get(face.getVertexIndices()[1] - 1);
+                 glVertex3f(v2.x, v2.y, v2.z);
+                 Vector3f n3 = m.getNormals().get(face.getNormalIndices()[2] - 1);
+                 glNormal3f(n3.x, n3.y, n3.z);
+                 Vector3f v3 = m.getVertices().get(face.getVertexIndices()[2] - 1);
+                 glVertex3f(v3.x, v3.y, v3.z);
+             }
+             glEnd();
+         }
+         glEndList();
+     }
     
     
     
@@ -576,6 +640,14 @@ public class GameEngine {
 	
 	
 	public static void initGUI() throws LWJGLException, IOException{
+		String XML;
+		
+		if(!playerDead){
+			XML = "actiondemo.xml";
+		}else{
+			XML = "end.xml";
+		}
+		
     	LWJGLRenderer renderer = new LWJGLRenderer();
         ActionDemo demo = new ActionDemo();
         GUI gui = new GUI(demo, renderer);
@@ -583,7 +655,7 @@ public class GameEngine {
         demo.requestKeyboardFocus();
 
         ThemeManager theme = ThemeManager.createThemeManager(
-                ActionDemo.class.getResource("actiondemo.xml"), renderer);
+                ActionDemo.class.getResource(XML), renderer);
         gui.applyTheme(theme);
         
 
@@ -598,22 +670,31 @@ public class GameEngine {
 
         gui.destroy();
         theme.destroy();
+		
     }
+	
+	public void initSound() throws SlickException{
+		gun = new Sound("sound/sub_machine_gun_single_shot.wav");
+		zombieDie = new Sound("sound/zombie_groan_002.wav");
+		game = new Music("sound/528136_Redux.wav");
+		game.loop();
+	}
     
 
-    public static void main(String[] args) throws LWJGLException, IOException {
+    public static void main(String[] args) throws LWJGLException, IOException, SlickException {
     	GameEngine engine = new GameEngine();
     	
     	
         engine.setUpDisplay();
+        engine.setUpStates();
         initGUI();
         engine.setUpDisplayListPlayer();
         engine.setUpDisplayListBunny();
-        engine.setUpStates();
+        engine.setUpDisplayListBirdy();
        // engine.setUpLighting();
         engine.setUpMatrices();
         engine.setUpCameraPlayer();
-        
+        engine.initSound();
         engine.enemyGenerator();
         engine.enterGameLoop();
         engine.cleanUp(false);

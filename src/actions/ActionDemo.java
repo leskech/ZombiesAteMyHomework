@@ -43,15 +43,15 @@ import test.TestUtils;
 
 public class ActionDemo extends Widget {
 
-    private final FPSCounter fpsCounter;
-    private final Label instructions;
-    private final Label result;
+    //private final FPSCounter fpsCounter;
+    //private final Label instructions;
+    //private final Label result;
     public boolean quit;
     public boolean start = false;
 
     @SuppressWarnings("LeakingThisInConstructor")
     public ActionDemo() {
-        fpsCounter = new FPSCounter();
+        /*fpsCounter = new FPSCounter();
         add(fpsCounter);
 
         instructions = new Label();
@@ -61,7 +61,7 @@ public class ActionDemo extends Widget {
         
         result = new Label();
         result.setTheme("result");
-        add(result);
+        add(result);*/
         
         getOrCreateActionMap().addMapping(this);
         
@@ -70,12 +70,12 @@ public class ActionDemo extends Widget {
     
     @Action
     public void start() {
-        result.setText("Starting game...");
+        //result.setText("Starting game...");
         start=true;
     }
     
-    @Override
-    protected void layout() {
+    //@Override
+    /*protected void layout() {
         // instructions are near the top 
         instructions.setSize(getInnerWidth(), instructions.getPreferredHeight());
         instructions.setPosition(getInnerX(), getInnerY() + 20);
@@ -89,6 +89,6 @@ public class ActionDemo extends Widget {
         fpsCounter.setPosition(
                 getInnerWidth() - fpsCounter.getWidth(),
                 getInnerHeight() - fpsCounter.getHeight());
-    }
+    }*/
 
 }
