@@ -55,7 +55,8 @@ public final class EulerCamera implements Camera {
     private float aspectRatio = 1;
     private final float zNear;
     private final float zFar;
-
+    public int tick;
+    
     private EulerCamera(Builder builder) {
         this.x = builder.x;
         this.y = builder.y;
