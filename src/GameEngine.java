@@ -571,7 +571,7 @@ public class GameEngine {
 	        glCullFace(GL_BACK);
 	        glEnable(GL_COLOR_MATERIAL);
 	        glColorMaterial(GL_FRONT, GL_DIFFUSE);
-	    }
+	 }
 	
 	
 	
