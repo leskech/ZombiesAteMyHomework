@@ -127,11 +127,11 @@ public class GameEngine {
              renderEnemies();       	 
          }
         
-         for(Camera e:enemyCams){
+         for(Camera e:enemyCams){   		 
         	 for(Weapon w:weapons){
-        		 if(collided(w,e)){
+        		 if(collided(w.w,e)){
         			 e.setPosition(99, 99, 99);
-        			 w.w.setPosition(99,99, 99);
+        			 w.w.tick=0;
         			 
         			 
         		 }
@@ -190,10 +190,10 @@ public class GameEngine {
  
  private void enemyGenerator(){
 	 for(int i=0;i<enemyct;i++){
-		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()), (float)(-100f*Math.random())));
-		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()), (float)(100f*Math.random())));
-		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()), (float)(-100f*Math.random())));
-		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()), (float)(100f*Math.random())));
+		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(-100f*Math.random()*1)));
+		 enemyCams.add(setUpCameraEnemy((float)(-100f*Math.random()*1), (float)(100f*Math.random()*1)));
+		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()*1), (float)(-100f*Math.random()*1)));
+		 enemyCams.add(setUpCameraEnemy((float)(100f*Math.random()*1), (float)(100f*Math.random()*1)));
 	 }
 	 
 	 
@@ -212,11 +212,11 @@ public class GameEngine {
     	float enemyx=cam.x();
     	float enemyz=cam.z();
     	
-    	if(playerx > enemyx)enemyx+=.05f;
-    	else enemyx-=.051f;
+    	if(playerx > enemyx)enemyx+=.02f;
+    	else enemyx-=.02f;
     	
-    	if(playerz > enemyz)enemyz+=.05f;
-    	else enemyz-=.05f;
+    	if(playerz > enemyz)enemyz+=.02f;
+    	else enemyz-=.02f;
     	
     	
     	cam.setPosition(enemyx, cam.y(), enemyz);
@@ -266,7 +266,7 @@ public class GameEngine {
         	  wep.wzup=true; 
         	  wep.w.tick=70;
         	  weapons.add(wep);
-        	  tick=1;
+        	  tick=20;
         	  canShoot= false;
           }
           if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)&& canShoot){
@@ -274,30 +274,30 @@ public class GameEngine {
         	  wep.wxleft=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
-        	  tick=1;
+        	  tick=20;
         	  canShoot= false;}
           if (Keyboard.isKeyDown(Keyboard.KEY_RIGHT)&& canShoot){
         	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
         	  wep.wxright=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
-        	  tick=1;
+        	  tick=20;
         	  canShoot= false;}
           if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)&& canShoot){
         	  Weapon wep = new Weapon((EulerCamera) makeWeaponCam());
         	  wep.wzdown=true;         	 
         	  wep.w.tick=70;
         	  weapons.add(wep);
-        	  tick=1;
+        	  tick=20;
         	  canShoot= false;}
           
           
        
-    	if (Keyboard.isKeyDown(Keyboard.KEY_A))x += 0.05f * delta;
-		if (Keyboard.isKeyDown(Keyboard.KEY_D))x -= 0.05f * delta;
+    	if (Keyboard.isKeyDown(Keyboard.KEY_A))x += 0.01f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_D))x -= 0.01f * delta;
 		
-		if (Keyboard.isKeyDown(Keyboard.KEY_W))z += 0.05f * delta;
-		if (Keyboard.isKeyDown(Keyboard.KEY_S))z -= 0.05f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_W))z += 0.01f * delta;
+		if (Keyboard.isKeyDown(Keyboard.KEY_S))z -= 0.01f * delta;
 	
 		
 		if(Keyboard.isKeyDown(Keyboard.KEY_1))System.out.println("Camera Angle:"+playerCam.pitch() +" "+playerCam.yaw() + " "+playerCam.roll());
@@ -369,7 +369,7 @@ public class GameEngine {
     }
 
     
-    private static void setUpStates() {    
+    private  void setUpStates() {    
     	angle=0; tick=0;   canShoot=true;
     	weapons=new Vector<Weapon>();
     	enemyCams=new Vector<Camera>();
@@ -490,9 +490,9 @@ public class GameEngine {
     
     
     
-    private boolean collided(Weapon w, Camera e){
-    	float weaponX=w.w.x();
-    	float weaponZ=w.w.z();
+    private boolean collided(Camera w, Camera e){
+    	float weaponX=w.x();
+    	float weaponZ=w.z();
     	
     	float enemyX=e.x();
     	float enemyZ=e.z();
