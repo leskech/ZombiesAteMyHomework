@@ -755,19 +755,19 @@ public class GameEngine {
 		String XML;
 		
 		if(!playerDead){
-			XML = "/test/actiondemo.xml";
+			XML = "/test/menu.xml";
 		}else{
-			XML = "/test/end.xml";
+			XML = "/test/menu.xml";
 		}
 		
     	LWJGLRenderer renderer = new LWJGLRenderer();
-        ActionDemo demo = new ActionDemo(engine);
+        Menu demo = new Menu(engine);
         GUI gui = new GUI(demo, renderer);
         
         demo.requestKeyboardFocus();
 
         ThemeManager theme = ThemeManager.createThemeManager(
-                ActionDemo.class.getResource(XML), renderer);
+                Menu.class.getResource(XML), renderer);
         gui.applyTheme(theme);
         
 
